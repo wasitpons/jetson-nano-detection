@@ -55,3 +55,7 @@ rich>=12.0;        python_version >= "3.7"
 # onnx>=1.11 dropped Py3.6 + arm64 Py3.6 wheels are scarce after 1.10.
 onnx>=1.8,<1.11;   python_version < "3.7"
 onnx>=1.12;        python_version >= "3.7"
+
+# onnx pulls in protobuf; protobuf 4.x dropped Py3.6. Pin to the 3.x line on
+# Jetson so pip doesn't resolve a wheel that refuses to install.
+protobuf<4;        python_version < "3.7"

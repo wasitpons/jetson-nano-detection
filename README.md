@@ -15,9 +15,23 @@ RTSP × 5  →  GStreamer hw decode (416×416)  →  drop-old buffer  →
 
 **บน Jetson Nano** (Python 3.6.9, JetPack 4.6.x — cv2 + tensorrt มาจาก JetPack):
 
+แนะนำให้สร้าง venv แบบเห็น system packages เพื่อให้ใช้ cv2 + tensorrt
+จาก JetPack ได้ แล้วรัน bootstrap script ครั้งเดียว:
+
 ```bash
-pip3 install --user -r requirements.txt
-pip3 install --user 'pycuda<2022.0'
+python3 -m venv --system-site-packages venv
+source venv/bin/activate
+bash tools/install_jetson.sh
+```
+
+Script จะ set `PATH` ให้ `nvcc`, pin build tools ที่เข้ากับ Py3.6, ลง numpy
+ก่อน pycuda (จำเป็น — ดู comment ในไฟล์), แล้วลง deps ที่เหลือ + pycuda
+ตามลำดับ. ปิดท้ายด้วย sanity check `import`.
+
+ถ้าไม่อยากใช้ venv:
+
+```bash
+bash tools/install_jetson.sh   # detect ว่าไม่อยู่ใน venv → ใช้ --user ให้
 ```
 
 **บน dev box** (Mac/Linux — ใช้ทดสอบ smoke ก่อน push):
