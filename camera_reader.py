@@ -55,7 +55,12 @@ def build_pipeline(
         f"! video/x-raw,format=BGRx,width={output_size},height={output_size} "
         f"! videoconvert "
         f"! video/x-raw,format=BGR "
-        f"! appsink name=sink drop=true max-buffers=1 sync=false emit-signals=false"
+        # name must contain "appsink" — cv2's GStreamer backend in OpenCV 4.1.1
+        # (Jetson JetPack build) substring-matches element names against
+        # "appsink"/"opencvsink" to locate the sink. A bare `name=sink`
+        # produces the misleading "cannot find appsink in manual pipeline"
+        # warning at open() time.
+        f"! appsink name=appsink0 drop=true max-buffers=1 sync=false emit-signals=false"
     )
 
 
