@@ -122,6 +122,10 @@ class MetricsCollector(threading.Thread):
                 "active_decoder": s.get("active_decoder"),
                 "frame_width": s.get("frame_width", 0),
                 "frame_height": s.get("frame_height", 0),
+                # cap.read() latency — reader.snapshot() returns the window
+                # averages and resets the accumulators on each call.
+                "read_avg_ms": s.get("read_avg_ms_window", 0.0),
+                "read_max_ms": s.get("read_max_ms_window", 0.0),
             })
 
         for b in self.buffers:

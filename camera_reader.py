@@ -108,6 +108,13 @@ class CameraReader(threading.Thread):
         self.last_frame_at = 0.0
         self.frame_width = 0
         self.frame_height = 0
+        # cap.read() latency tracking — surfaces blocking time per frame.
+        # *_total = lifetime, *_window = reset by snapshot() each metrics tick.
+        self.read_total_ms = 0.0
+        self.read_max_ms = 0.0
+        self.read_window_ms = 0.0
+        self.read_window_count = 0
+        self.read_window_max_ms = 0.0
         self._lock = threading.Lock()
 
     # ----- pipeline construction & probing -------------------------------------------------
@@ -194,7 +201,9 @@ class CameraReader(threading.Thread):
                     continue
                 backoff = 0.5
 
+            t_read0 = time.monotonic()
             ok, frame = cap.read()
+            read_ms = (time.monotonic() - t_read0) * 1000.0
             if not ok or frame is None:
                 with self._lock:
                     self.read_failures += 1
@@ -208,6 +217,13 @@ class CameraReader(threading.Thread):
             with self._lock:
                 self.frames_read += 1
                 self.last_frame_at = now
+                self.read_total_ms += read_ms
+                if read_ms > self.read_max_ms:
+                    self.read_max_ms = read_ms
+                self.read_window_ms += read_ms
+                self.read_window_count += 1
+                if read_ms > self.read_window_max_ms:
+                    self.read_window_max_ms = read_ms
                 h, w = frame.shape[:2]
                 if w != self.frame_width or h != self.frame_height:
                     log.info("[%s] frame size changed -> %dx%d", self.camera_id, w, h)
@@ -224,6 +240,16 @@ class CameraReader(threading.Thread):
 
     def snapshot(self) -> dict:
         with self._lock:
+            avg_total = (self.read_total_ms / self.frames_read) if self.frames_read else 0.0
+            avg_window = (
+                self.read_window_ms / self.read_window_count
+                if self.read_window_count else 0.0
+            )
+            max_window = self.read_window_max_ms
+            # Reset window so each MetricsCollector tick gets a fresh delta.
+            self.read_window_ms = 0.0
+            self.read_window_count = 0
+            self.read_window_max_ms = 0.0
             return {
                 "camera_id": self.camera_id,
                 "active_decoder": self.active_decoder,
@@ -233,4 +259,8 @@ class CameraReader(threading.Thread):
                 "last_frame_at": self.last_frame_at,
                 "frame_width": self.frame_width,
                 "frame_height": self.frame_height,
+                "read_avg_ms_total": avg_total,
+                "read_max_ms_total": self.read_max_ms,
+                "read_avg_ms_window": avg_window,
+                "read_max_ms_window": max_window,
             }

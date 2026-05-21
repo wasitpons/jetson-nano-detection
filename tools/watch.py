@@ -197,6 +197,7 @@ def render_cameras(metrics: Optional[dict]) -> Panel:
     table.add_column("Camera", style="bold")
     table.add_column("Decoder")
     table.add_column("FPS", justify="right")
+    table.add_column("Read ms", justify="right")
     table.add_column("Age", justify="right")
     table.add_column("W×H")
     table.add_column("Produced", justify="right")
@@ -205,13 +206,13 @@ def render_cameras(metrics: Optional[dict]) -> Panel:
     table.add_column("Reconn", justify="right")
 
     if metrics is None:
-        table.add_row("(no data yet)", "", "", "", "", "", "", "", "",
+        table.add_row("(no data yet)", "", "", "", "", "", "", "", "", "",
                       style="dim")
         return Panel(table, title="cameras", border_style="dim")
 
     per_cam = metrics.get("per_camera") or {}
     if not per_cam:
-        table.add_row("(no cameras reporting)", "", "", "", "", "", "", "", "",
+        table.add_row("(no cameras reporting)", "", "", "", "", "", "", "", "", "",
                       style="dim")
         return Panel(table, title="cameras", border_style="dim")
 
@@ -226,15 +227,19 @@ def render_cameras(metrics: Optional[dict]) -> Panel:
         dropped = int(v.get("buffer_dropped_window") or 0)
         fails = int(v.get("read_failures_window") or 0)
         reconn = int(v.get("reconnects_window") or 0)
+        read_avg = float(v.get("read_avg_ms") or 0)
+        read_max = float(v.get("read_max_ms") or 0)
 
         wxh = f"{w}×{h}" if w and h else "—"
         dec_style = "green" if decoder and decoder != "(none)" else "red"
         fail_style = "red" if fails > 0 else "dim"
+        read_str = f"{read_avg:>4.1f}/{read_max:.0f}" if read_avg > 0 else "—"
 
         table.add_row(
             cid,
             Text(decoder, style=dec_style),
             Text(f"{fps:>4.2f}", style=_fps_colour(fps)),
+            read_str,
             Text(_fmt_age(age_ms), style=_age_colour(age_ms)),
             wxh,
             f"{produced}",
