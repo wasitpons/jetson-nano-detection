@@ -222,9 +222,18 @@ class TensorRTDetector(Detector):
         )
 
     def close(self) -> None:
-        # Managed allocs are freed by their Python wrappers + the CUDA context
-        # at interpreter exit; just drop references so a fallback swap doesn't
-        # keep the engine alive.
+        # Drop refs so the managed allocs + execution context release on GC.
         self._host_input = self._host_output = None
         self._bindings = []
         self._stream = self._context = self._engine = None
+        # Pop the CUDA context that pycuda.autoinit pushed onto this thread.
+        # Without this, atexit prints "PyCUDA ERROR: context stack was not
+        # empty upon module cleanup" — cosmetic but noisy. Guarded because
+        # close() may be called twice (once on warmup-failure, once on
+        # interpreter shutdown) or from a different thread.
+        if self._cuda is not None and self._ctx_thread == threading.get_ident():
+            try:
+                self._cuda.Context.pop()
+            except Exception:
+                pass
+            self._cuda = None

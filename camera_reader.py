@@ -48,7 +48,12 @@ def build_pipeline(
         f"rtspsrc location={rtsp_url} latency={latency_ms} "
         f"protocols={protocols} drop-on-latency={drop} "
         f"! rtph264depay "
-        f"! h264parse "
+        # config-interval=-1 forces h264parse to insert SPS/PPS in front of
+        # every IDR. Without it, the SPS/PPS arrives only at stream start (or
+        # every N seconds depending on the server) — if the leaky queue below
+        # drops it before nvv4l2decoder sees it, the decoder spins on
+        # "Stream format not found, dropping the frame" forever.
+        f"! h264parse config-interval=-1 "
         f"! queue max-size-buffers=1 leaky=downstream "
         f"! {decoder} "
         f"! nvvidconv "
