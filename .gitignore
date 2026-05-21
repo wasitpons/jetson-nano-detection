@@ -33,17 +33,14 @@ reports/*.json
 # Keep the directories themselves in git via .gitkeep:
 !**/.gitkeep
 
-# --- Model artifacts (non-portable, large) ----------------------------------
+# --- Model artifacts ---------------------------------------------------------
 # Engines must be rebuilt on each Jetson/JetPack/TRT change; the metadata
-# captures the device fingerprint. Both are per-board and shouldn't ship in
-# the repo. The ONNX files are also typically large + version-dependent.
+# captures the device fingerprint. Both are per-board and never ship in git.
+# ONNX files ARE tracked — they're the portable source the pipeline converts
+# to .engine on the target. (~10-50 MB each; consider Git LFS if > 50 MB.)
 models/*.engine
 models/*.build.log
 models/*.engine_metadata.json
-models/*.onnx
-# But always keep the labels file and any committed sample images:
-!models/coco_labels.txt
-!models/samples/
 
 # --- Claude session state ---------------------------------------------------
 CLAUDE.md
