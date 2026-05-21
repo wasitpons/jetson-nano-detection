@@ -53,9 +53,24 @@ CMD=("$TRTEXEC" "--onnx=$ONNX" "--saveEngine=$ENGINE_OUT" "--workspace=$WORKSPAC
 [[ -n "$PFLAG" ]] && CMD+=("$PFLAG")
 
 echo "Running: ${CMD[*]}" | tee "$LOG_PATH"
-if ! "${CMD[@]}" >> "$LOG_PATH" 2>&1; then
-  echo "ERROR: trtexec build failed. See $LOG_PATH" >&2
-  tail -n 20 "$LOG_PATH" >&2
+echo "Building TensorRT engine — expect 5–15 min on Jetson Nano." | tee -a "$LOG_PATH"
+echo "trtexec progress (also tee'd to $LOG_PATH):" | tee -a "$LOG_PATH"
+echo "--------------------------------------------------------------------------"
+start_ts=$SECONDS
+# Stream trtexec stdout/stderr to the terminal *and* append to the log, so
+# the user gets live phase + layer-timing output instead of a 10-minute
+# silent stare at the prompt. stdbuf forces line-buffered output (trtexec
+# block-buffers when stdout isn't a tty otherwise).
+if command -v stdbuf >/dev/null 2>&1; then
+  stdbuf -oL -eL "${CMD[@]}" 2>&1 | tee -a "$LOG_PATH"
+else
+  "${CMD[@]}" 2>&1 | tee -a "$LOG_PATH"
+fi
+status=${PIPESTATUS[0]}
+echo "--------------------------------------------------------------------------"
+echo "trtexec done in $((SECONDS - start_ts))s (exit $status)" | tee -a "$LOG_PATH"
+if [[ $status -ne 0 ]]; then
+  echo "ERROR: trtexec build failed. Full log at $LOG_PATH" >&2
   exit 1
 fi
 if [[ ! -f "$ENGINE_OUT" ]]; then
