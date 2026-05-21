@@ -66,6 +66,10 @@ class DetectorLoop(threading.Thread):
         self._win_count = 0
         self._win_max_ms = 0.0
         self._lock = threading.Lock()
+        # Signalled once detector.warmup() returns successfully. run_forever()
+        # waits on this before starting GStreamer camera readers — see the
+        # "warm first, then cameras" note below.
+        self.warmup_done = threading.Event()
 
     def run(self) -> None:
         try:
@@ -84,6 +88,7 @@ class DetectorLoop(threading.Thread):
                 log.exception("detector close failed during warmup-failure shutdown")
             return
         log.info("detector loop started")
+        self.warmup_done.set()
 
         while not self.stop_event.is_set():
             frame = self.scheduler.next_frame(self.stop_event)
@@ -241,11 +246,31 @@ def build_runtime(config: dict):
 def run_forever(config: dict) -> int:
     stop_event, readers, _, detector_loop, metrics, event_logger = build_runtime(config)
 
+    # Warm the detector BEFORE starting GStreamer camera readers. On Jetson
+    # Tegra, TRT (CUDA + managed memory) and `nvv4l2decoder` share the same
+    # Tegra hardware + driver state — starting 5 GStreamer pipelines in
+    # parallel with TRT warmup makes warmup stall indefinitely (observed
+    # >1h hang on a Nano 2GB). Warming first lets the TRT engine acquire
+    # its CUDA context cleanly, then readers initialise after.
+    log.info("warming up detector=%s before starting cameras",
+             detector_loop.detector.name)
+    detector_loop.start()
+    while not detector_loop.warmup_done.is_set() and not stop_event.is_set():
+        if not detector_loop.is_alive():
+            log.error("detector loop died before warmup completed")
+            event_logger.close()
+            return 1
+        time.sleep(0.1)
+    if stop_event.is_set():
+        log.error("stop signalled before warmup completed")
+        detector_loop.join(timeout=5)
+        event_logger.close()
+        return 1
+
     log.info("starting %d camera readers", len(readers))
     for r in readers:
         r.start()
     metrics.start()
-    detector_loop.start()
 
     def _sig(_s, _f):
         log.info("signal received; stopping")
