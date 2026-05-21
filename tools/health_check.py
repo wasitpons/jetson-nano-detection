@@ -98,7 +98,7 @@ def _check_file(label: str, path: Optional[str], fix: str) -> CheckResult:
 def _check_engine_loadable(engine_path: Optional[str]) -> CheckResult:
     if not engine_path:
         return CheckResult("engine deserializes", False, "no path configured",
-                           "Set detector.tensorrt.engine_path in config.yaml.")
+                           "Set detector.engine in config.yaml (run tools/swap_model.sh).")
     p = Path(engine_path)
     if not p.is_absolute():
         p = PROJECT_ROOT / p
@@ -156,9 +156,8 @@ def main() -> int:
 
     cfg = _load_config_path(args.config)
     det_cfg = cfg.get("detector") or {}
-    trt_cfg = det_cfg.get("tensorrt") or {}
-    engine_path = args.engine or trt_cfg.get("engine_path")
-    labels_path = args.labels or det_cfg.get("labels_path")
+    engine_path = args.engine or det_cfg.get("engine")
+    labels_path = args.labels or det_cfg.get("labels") or "models/coco_labels.txt"
 
     checks: List[Callable[[], CheckResult]] = [
         _check_python,

@@ -33,6 +33,25 @@ if ! command -v nvcc >/dev/null 2>&1; then
 fi
 echo "[install] using $(nvcc --version | tail -n1)"
 
+# --- apt: protoc for onnx's C++ build (onnx has no aarch64/Py3.6 wheel) ----
+# onnx in requirements.txt builds from sdist on Jetson; its CMake config
+# requires `protoc` from system protobuf. If protoc is already installed
+# (or onnx was dropped from requirements.txt), this is a no-op.
+if ! command -v protoc >/dev/null 2>&1; then
+    if [ "$(id -u)" = "0" ]; then
+        sudo_cmd=""
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo_cmd="sudo"
+    else
+        echo "WARN: protoc missing and no sudo available — onnx build will fail." >&2
+        echo "      Install manually: apt-get install -y protobuf-compiler libprotoc-dev libprotobuf-dev" >&2
+        sudo_cmd=""
+    fi
+    echo "[install] installing protobuf-compiler via apt (needed by onnx sdist build)"
+    DEBIAN_FRONTEND=noninteractive ${sudo_cmd} apt-get install -y \
+        protobuf-compiler libprotoc-dev libprotobuf-dev
+fi
+
 # --- pip flag: --user outside venv, plain inside ---------------------------
 pip_flags=()
 if [ -z "${VIRTUAL_ENV:-}" ]; then
@@ -46,9 +65,11 @@ pip() { python -m pip "$@"; }
 
 # --- 1. build tools that still work on Py3.6 -------------------------------
 # pip >= 22 / setuptools >= 60 drop Py3.6 or break pycuda sdist.
-echo "[install] upgrading pip / setuptools / wheel (Py3.6-compatible pins)"
+# Cython is needed because numpy 1.19.5 has no aarch64/Py3.6 wheel on PyPI,
+# so pip falls back to building from sdist which cythonizes during install.
+echo "[install] upgrading pip / setuptools / wheel / Cython (Py3.6-compatible pins)"
 pip install --no-cache-dir "${pip_flags[@]}" \
-    'pip<21' 'setuptools<60' 'wheel'
+    'pip<21' 'setuptools<60' 'wheel' 'Cython<3'
 
 # --- 2. numpy first, so pycuda's setup_requires is satisfied ---------------
 echo "[install] installing numpy (must precede pycuda)"
