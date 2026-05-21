@@ -72,7 +72,16 @@ class DetectorLoop(threading.Thread):
             log.info("warming up detector=%s", self.detector.name)
             self.detector.warmup()
         except Exception:
-            log.exception("detector warmup failed; loop will not start")
+            # Signal the whole pipeline to stop — otherwise main thread sits in
+            # stop_event.wait() forever while camera readers retry, and the
+            # allocated TRT CUDA context leaks into the atexit cleanup
+            # ("PyCUDA ERROR: context stack was not empty").
+            log.exception("detector warmup failed; signalling shutdown")
+            self.stop_event.set()
+            try:
+                self.detector.close()
+            except Exception:
+                log.exception("detector close failed during warmup-failure shutdown")
             return
         log.info("detector loop started")
 
