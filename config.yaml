@@ -40,11 +40,11 @@ scheduler:
   stale_frame_factor: 2.0
 
 cameras:
-  - {camera_id: cam-01, rtsp_url: rtsp://user:pass@10.0.0.101:554/stream1, enabled: true,  target_fps: 1.0}
-  - {camera_id: cam-02, rtsp_url: rtsp://user:pass@10.0.0.102:554/stream1, enabled: true,  target_fps: 1.0}
-  - {camera_id: cam-03, rtsp_url: rtsp://user:pass@10.0.0.103:554/stream1, enabled: true,  target_fps: 1.0}
-  - {camera_id: cam-04, rtsp_url: rtsp://user:pass@10.0.0.104:554/stream1, enabled: true,  target_fps: 1.0}
-  - {camera_id: cam-05, rtsp_url: rtsp://user:pass@10.0.0.105:554/stream1, enabled: false, target_fps: 1.0}
+  - {camera_id: cctv05, rtsp_url: "rtsp://10.0.11.153:8554/cctv05", enabled: true, target_fps: 1.0}
+  - {camera_id: cctv07, rtsp_url: "rtsp://10.0.11.153:8554/cctv07", enabled: true, target_fps: 1.0}
+  - {camera_id: cctv08, rtsp_url: "rtsp://10.0.11.153:8554/cctv08", enabled: true, target_fps: 1.0}
+  - {camera_id: cctv09, rtsp_url: "rtsp://10.0.11.153:8554/cctv09", enabled: true, target_fps: 1.0}
+  - {camera_id: cctv10, rtsp_url: "rtsp://10.0.11.153:8554/cctv10", enabled: true, target_fps: 1.0}
 
 fake_detector:
   min_latency_ms: 30
