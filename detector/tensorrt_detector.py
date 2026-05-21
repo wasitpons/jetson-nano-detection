@@ -15,8 +15,13 @@ Two Jetson-specific design choices live here:
 2) **Thread-bound CUDA context** — `pycuda.autoinit` binds the primary CUDA
    context to the **calling thread**. The `Detector` is constructed on the
    main thread but `infer()` runs on the `DetectorLoop` thread, so we defer
-   the pycuda import + buffer allocation to the first `infer()` call. A
-   thread-id check raises if a single detector is shared across threads.
+   the pycuda import, **engine deserialization**, execution-context create,
+   and buffer allocation to the first `infer()` call. Engine deserialization
+   must happen on the same thread as execute() because TRT 8 binds the
+   engine to whatever CUDA context is current at deserialize time; running
+   deserialize on the main thread and execute() on another thread yields
+   `invalid resource handle` on `execute_async_v2`. A thread-id check
+   raises if a single detector is shared across threads.
 """
 
 import logging
@@ -80,9 +85,15 @@ class TensorRTDetector(Detector):
         self._output_shape: Optional[tuple] = None
 
         self._cuda_init_lock = threading.Lock()
-        self._load_engine()
+        # Engine deserialization is deferred to _ensure_cuda_context() — see
+        # the module docstring for why. We do a cheap existence check here so
+        # build_detector()'s fallback can swap to FakeDetector early instead
+        # of waiting until the first infer() call to discover a missing file.
+        import os
+        if not os.path.isfile(self.engine_path):
+            raise RuntimeError(f"engine not found: {self.engine_path}")
 
-    # ----- engine bring-up (no CUDA context needed yet) ----------------------
+    # ----- engine bring-up (runs on the inference thread) --------------------
 
     def _load_engine(self) -> None:
         trt = self._trt
@@ -149,6 +160,10 @@ class TensorRTDetector(Detector):
                 ) from e
             self._cuda = cuda
             self._ctx_thread = current
+
+            # Deserialize the engine ON THIS THREAD so it binds to the same
+            # CUDA context that pycuda.autoinit just created.
+            self._load_engine()
 
             trt = self._trt
             in_dtype = trt.nptype(self._engine.get_binding_dtype(self._input_binding))
