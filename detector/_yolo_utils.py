@@ -7,8 +7,6 @@ in one module means the two backends can never drift on the YOLO math —
 which is the part most likely to introduce silent regressions.
 """
 
-from __future__ import annotations
-
 from typing import Dict, Iterable, List, Set, Tuple
 
 import cv2

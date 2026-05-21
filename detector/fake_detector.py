@@ -5,8 +5,6 @@ so the postprocess/event/metrics chain can be exercised without CUDA, an
 engine, or RTSP.
 """
 
-from __future__ import annotations
-
 import random
 import time
 from typing import List

@@ -17,8 +17,6 @@ Exit codes:
   2 — zero detections (canary regressed)
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import logging

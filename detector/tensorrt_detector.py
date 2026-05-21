@@ -19,8 +19,6 @@ Two Jetson-specific design choices live here:
    thread-id check raises if a single detector is shared across threads.
 """
 
-from __future__ import annotations
-
 import logging
 import threading
 import time

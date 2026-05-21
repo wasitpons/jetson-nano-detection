@@ -15,8 +15,6 @@ The active decoder is reported via snapshot() so metrics can show which path
 actually got used.
 """
 
-from __future__ import annotations
-
 import logging
 import threading
 import time

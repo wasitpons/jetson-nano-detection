@@ -20,8 +20,6 @@ Usage:
   python3 tools/watch.py --once     # render one frame then exit (CI / screenshots)
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

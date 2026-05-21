@@ -9,8 +9,6 @@ Usage:
     python3 edge_pipeline.py --config config.yaml
 """
 
-from __future__ import annotations
-
 import argparse
 import logging
 import signal
@@ -19,6 +17,14 @@ import threading
 import time
 from pathlib import Path
 from typing import List, Tuple
+
+# Fail fast on unsupported Python. Jetson Nano JetPack 4.6.x ships Python
+# 3.6.9; we don't support anything older. Anything newer is fine for dev.
+if sys.version_info < (3, 6):
+    sys.exit(
+        "ERROR: jetson_runtime requires Python 3.6+ "
+        "(JetPack 4.6.x ships 3.6.9). Got {}.{}.{}.".format(*sys.version_info[:3])
+    )
 
 import yaml
 

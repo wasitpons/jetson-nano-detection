@@ -16,8 +16,6 @@ Metrics that actually help when you're chasing Jetson bottlenecks:
   memory_mb                          : memory growth / leak
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import os
@@ -96,7 +94,7 @@ class MetricsCollector(threading.Thread):
                        int(round((p / 100.0) * (len(sorted_vals) - 1)))))
         return sorted_vals[k]
 
-    def _delta(self, key: str, snap: dict, fields: list[str]) -> dict:
+    def _delta(self, key: str, snap: dict, fields: List[str]) -> dict:
         prev = self._prev.get(key, {})
         out = {f: snap.get(f, 0) - prev.get(f, 0) for f in fields}
         self._prev[key] = snap

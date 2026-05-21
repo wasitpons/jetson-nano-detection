@@ -11,8 +11,6 @@ Usage:
     python3 _set_active_engine.py <config.yaml> <engine_path> <imgsz>
 """
 
-from __future__ import annotations
-
 import re
 import sys
 from pathlib import Path

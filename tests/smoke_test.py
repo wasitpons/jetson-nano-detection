@@ -12,8 +12,6 @@ cameras (one intentionally broken/stalled). Validates:
 No cv2 / RTSP / onnxruntime / model needed.
 """
 
-from __future__ import annotations
-
 import json
 import os
 import sys

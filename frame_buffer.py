@@ -7,8 +7,6 @@ the slot, and the displaced frame is counted as a drop. Counting drops at
 this boundary is the proof that the no-backlog invariant holds.
 """
 
-from __future__ import annotations
-
 import threading
 import time
 from dataclasses import dataclass

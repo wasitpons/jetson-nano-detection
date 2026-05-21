@@ -9,8 +9,6 @@ Probes the system for JetPack/L4T, TensorRT, CUDA, and device model versions.
 Missing probes become JSON `null` so downstream consumers don't crash.
 """
 
-from __future__ import annotations
-
 import argparse
 import datetime as dt
 import json
@@ -19,7 +17,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 
 HEADER_NOTE = (
@@ -35,7 +33,7 @@ def _read_text(path: str) -> Optional[str]:
         return None
 
 
-def _run(cmd: list[str]) -> Optional[str]:
+def _run(cmd: List[str]) -> Optional[str]:
     try:
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         if out.returncode == 0 and out.stdout.strip():

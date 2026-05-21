@@ -14,8 +14,6 @@ Usage:
   python3 tools/health_check.py --config ../config.yaml
 """
 
-from __future__ import annotations
-
 import argparse
 import importlib
 import shutil

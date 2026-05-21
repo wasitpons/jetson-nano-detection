@@ -1,7 +1,5 @@
 """Detector ABC. Keep the surface tiny so swapping engines stays cheap."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List

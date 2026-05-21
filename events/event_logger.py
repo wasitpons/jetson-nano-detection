@@ -5,8 +5,6 @@ for Task 01 a local file is enough. fsync is intentionally off — we'd rather
 lose the tail on a power cut than stall the inference loop on every write.
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import os

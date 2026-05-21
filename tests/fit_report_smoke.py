@@ -5,8 +5,6 @@ runs fit_report.py against it, asserts the verdict is one of
 {PASS, WARNING, FAIL} and that both report files were written.
 """
 
-from __future__ import annotations
-
 import json
 import subprocess
 import sys

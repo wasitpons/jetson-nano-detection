@@ -11,8 +11,6 @@ Each camera owns its `target_fps`. The scheduler:
 Pull-based: the inference loop calls `next_frame()` itself. No extra thread.
 """
 
-from __future__ import annotations
-
 import logging
 import threading
 import time
