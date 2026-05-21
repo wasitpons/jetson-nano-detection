@@ -1,0 +1,50 @@
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# --- Editors / OS ------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# --- Runtime artifacts (generated; never commit) ----------------------------
+logs/*.jsonl
+logs/*.log
+outputs/*.png
+outputs/*.jpg
+outputs/*.jpeg
+reports/*.md
+reports/*.json
+# Keep the directories themselves in git via .gitkeep:
+!**/.gitkeep
+
+# --- Model artifacts (non-portable, large) ----------------------------------
+# Engines must be rebuilt on each Jetson/JetPack/TRT change; the metadata
+# captures the device fingerprint. Both are per-board and shouldn't ship in
+# the repo. The ONNX files are also typically large + version-dependent.
+models/*.engine
+models/*.build.log
+models/*.engine_metadata.json
+models/*.onnx
+# But always keep the labels file and any committed sample images:
+!models/coco_labels.txt
+!models/samples/
+
+# --- Claude session state ---------------------------------------------------
+CLAUDE.md
+.claude/

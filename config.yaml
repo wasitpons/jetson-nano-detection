@@ -1,0 +1,55 @@
+# jetson_runtime config. RTSP hardware decode → fair scheduling → one YOLO loop.
+# Swap the model with `tools/swap_model.sh <some.onnx>`.
+
+node_id: jetson-01
+metrics_interval_sec: 5
+event_log_path: logs/detections.jsonl
+metrics_log_path: logs/runtime_metrics.jsonl
+
+# Active detector. The engine is .engine on Jetson; rebuild on each Jetson /
+# JetPack / TRT change (`tools/swap_model.sh <onnx>`). allow_fake_fallback
+# means: if the engine can't load (missing, wrong TRT version, no pycuda),
+# serve FakeDetector instead of crashing — keeps demos alive.
+detector:
+  engine: models/yolov8n_416_fp16.engine
+  imgsz: 416
+  conf_thres: 0.35
+  iou_thres: 0.5
+  vehicle_class_ids: [2, 3, 5, 7]
+  class_names:
+    2: car
+    3: motorcycle
+    5: bus
+    7: truck
+  allow_fake_fallback: true
+
+# Hardware decode + drop-old per camera. Decoder + output_size are global —
+# every camera uses the same Tegra hw path and the same resize-to-416.
+rtsp:
+  decoder_preference: nvv4l2decoder
+  fallback_decoder: omxh264dec
+  output_size: 416
+  latency_ms: 0
+  protocols: tcp
+  drop_on_latency: true
+  open_probe_timeout_s: 8
+  reconnect_backoff_max_s: 8.0
+
+scheduler:
+  starvation_grace_ms: 3000
+  stale_frame_factor: 2.0
+
+cameras:
+  - {camera_id: cam-01, rtsp_url: rtsp://user:pass@10.0.0.101:554/stream1, enabled: true,  target_fps: 1.0}
+  - {camera_id: cam-02, rtsp_url: rtsp://user:pass@10.0.0.102:554/stream1, enabled: true,  target_fps: 1.0}
+  - {camera_id: cam-03, rtsp_url: rtsp://user:pass@10.0.0.103:554/stream1, enabled: true,  target_fps: 1.0}
+  - {camera_id: cam-04, rtsp_url: rtsp://user:pass@10.0.0.104:554/stream1, enabled: true,  target_fps: 1.0}
+  - {camera_id: cam-05, rtsp_url: rtsp://user:pass@10.0.0.105:554/stream1, enabled: false, target_fps: 1.0}
+
+fake_detector:
+  min_latency_ms: 30
+  max_latency_ms: 60
+  max_dets_per_frame: 2
+
+logging:
+  level: INFO

@@ -1,0 +1,49 @@
+# jetson_runtime — Python dependencies.
+#
+# Install on Jetson Nano (Python 3.6.9, JetPack 4.6.x):
+#     pip3 install --user -r requirements.txt
+#     pip3 install --user 'pycuda<2022.0'         # needs CUDA toolkit; see below
+#
+# Install on dev box (macOS / Linux, Python ≥ 3.7) — for smoke testing only:
+#     pip3 install -r requirements.txt
+#     pip3 install 'opencv-python>=4.5'           # see below
+#
+# ---------------------------------------------------------------------------
+# DELIBERATELY NOT IN THIS FILE
+# ---------------------------------------------------------------------------
+#
+#   tensorrt    — ships with JetPack. Don't pip-install it.
+#
+#   pycuda      — needs CUDA toolkit on PATH. Excluded so a dev box without
+#                 CUDA doesn't fail this whole file. On Jetson:
+#                     pip3 install --user 'pycuda<2022.0'
+#
+#   opencv-python — on Jetson, use the JetPack-provided cv2 (built with
+#                 GStreamer + Tegra plugins; nvv4l2decoder, nvvidconv). Pip's
+#                 opencv-python would shadow it and break hardware decode.
+#                 On a dev box for smoke testing only:
+#                     pip3 install 'opencv-python>=4.5'
+#
+# Version pins below cap older releases for Python 3.6 (Jetson). On newer
+# Python the floors are raised so dev boxes get current-line packages.
+# ---------------------------------------------------------------------------
+
+# Config loading.
+PyYAML>=5.1
+
+# Numerical core. numpy 1.20+ dropped Python 3.6.
+numpy>=1.19,<1.20; python_version < "3.7"
+numpy>=1.21;       python_version >= "3.7"
+
+# Process / system metrics (CPU%, RSS, thread count) for MetricsCollector.
+psutil>=5.7
+
+# Live TUI dashboard. rich 11+ dropped Python 3.6.
+rich>=10.0,<11;    python_version < "3.7"
+rich>=12.0;        python_version >= "3.7"
+
+# Optional but recommended — lets tools/_write_engine_metadata.py probe the
+# ONNX input shape into engine_metadata.json. If absent, that field is null
+# in the metadata and the rest of the pipeline still works.
+onnx>=1.8,<1.11;   python_version < "3.7"
+onnx>=1.12;        python_version >= "3.7"
