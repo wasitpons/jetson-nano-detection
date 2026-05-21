@@ -75,6 +75,18 @@ pip install --no-cache-dir "${pip_flags[@]}" \
 echo "[install] installing numpy (must precede pycuda)"
 pip install --no-cache-dir "${pip_flags[@]}" 'numpy>=1.19,<1.20'
 
+# --- 2b. MarkupSafe pre-install (Py3.6 aarch64 only) ----------------------
+# MarkupSafe 2.x has no aarch64 wheel for Py3.6, so pip falls back to its
+# sdist. The sdist's setup.cfg uses `version = attr: markupsafe.__version__`,
+# which makes setuptools try to `import markupsafe` during egg_info — before
+# the package is installed — and the install fails. MarkupSafe 1.1.1 has an
+# aarch64 cp36 wheel on PyPI, so pinning <2 makes pip pick the wheel and
+# skip the sdist build entirely. MarkupSafe is pulled transitively (likely
+# via Jinja2 in one of the deps), so we install it ahead of requirements.txt
+# the same way numpy goes ahead of pycuda above.
+echo "[install] installing MarkupSafe<2 (Py3.6 aarch64 has no MarkupSafe 2.x wheel)"
+pip install --no-cache-dir "${pip_flags[@]}" 'MarkupSafe<2'
+
 # --- 3. rest of project deps ----------------------------------------------
 echo "[install] installing -r requirements.txt"
 pip install --no-cache-dir "${pip_flags[@]}" -r requirements.txt
