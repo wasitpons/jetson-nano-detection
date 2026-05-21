@@ -23,12 +23,12 @@ import resource
 import sys
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
 
-def _read_memory_mb() -> tuple[float, str]:
+def _read_memory_mb() -> Tuple[float, str]:
     """Return (memory_mb, source). Prefer psutil; fall back to resource."""
     try:
         import psutil

@@ -14,7 +14,7 @@ Pull-based: the inference loop calls `next_frame()` itself. No extra thread.
 import logging
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from frame_buffer import Frame, LatestFrameBuffer
 
@@ -53,7 +53,7 @@ class FrameScheduler:
         """Block until a fresh, fair, non-stale frame is ready, then return it."""
         while not stop_event.is_set():
             now = time.monotonic()
-            best: Optional[tuple[float, str]] = None    # (wait_time, camera_id)
+            best: Optional[Tuple[float, str]] = None    # (wait_time, camera_id)
 
             for cid, buf in self._buffers.items():
                 # Per-camera FPS gate.
